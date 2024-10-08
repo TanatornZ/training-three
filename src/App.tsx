@@ -3,8 +3,13 @@ import * as THREE from "three";
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null!);
+  const active = useRef(false);
+
   useEffect(() => {
     if (!canvas.current) return;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -38,16 +43,50 @@ function App() {
 
     camera.position.z = 5;
 
+    const onMouseMove = (event: { clientX: number; clientY: number }) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(cube);
+      if (intersects.length > 0) {
+        active.current = true;
+        cube.material.color.set("#ff0000");
+      } else {
+        active.current = false;
+        cube.material.color.set("#ffffff");
+      }
+    };
+
     function animate() {
       cube.rotation.x += 0.01;
       cube.rotation.y += 0.01;
+
+      // Animate scaling: scale up and down between 1 and 2
+      if (active.current) {
+        if (cube.scale.x <= 2) {
+          cube.scale.x += 0.01;
+          cube.scale.y += 0.01;
+          cube.scale.z += 0.01;
+        }
+      } else {
+        if (cube.scale.x > 1) {
+          cube.scale.x -= 0.01;
+          cube.scale.y -= 0.01;
+          cube.scale.z -= 0.01;
+        }
+      }
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
     animate();
 
+    // Add event listener
+    window.addEventListener("mousemove", onMouseMove);
+
+    // Clean up on component unmount
     return () => {
-      renderer.dispose(); // Dispose of the renderer and context
+      window.removeEventListener("mousemove", onMouseMove);
+      renderer.dispose();
     };
   }, [canvas.current]);
 
