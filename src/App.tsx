@@ -1,35 +1,59 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const canvas = useRef<HTMLCanvasElement>(null!);
+  useEffect(() => {
+    if (!canvas.current) return;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      canvas: canvas.current,
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xffffff);
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: "#ffffff", // White color
+      metalness: 0.2, // Make it less metallic for better lighting
+      roughness: 0.7, // Adjust roughness to control reflections });
+    });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    // Light sources
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // soft ambient light
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 30); // point light
+    pointLight.position.set(5, 5, 5); // set light position
+    scene.add(pointLight);
+
+    camera.position.z = 5;
+
+    function animate() {
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    return () => {
+      renderer.dispose(); // Dispose of the renderer and context
+    };
+  }, [canvas.current]);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <canvas ref={canvas} style={{ width: "100vw", height: "100vh" }}></canvas>
+  );
 }
 
-export default App
+export default App;
