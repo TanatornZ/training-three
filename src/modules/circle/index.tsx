@@ -11,10 +11,13 @@ function CirclePage() {
     planeConstant: 0,
     showHelpers: false,
     alphaToCoverage: true,
+    rotate: false,
   };
 
   useEffect(() => {
     if (!canvas.current) return;
+
+    let rotateAnimation;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -88,7 +91,7 @@ function CirclePage() {
     helpers.add(new THREE.PlaneHelper(clipPlanes[0], 2, 0xff0000));
     helpers.add(new THREE.PlaneHelper(clipPlanes[1], 2, 0x00ff00));
     helpers.add(new THREE.PlaneHelper(clipPlanes[2], 2, 0x0000ff));
-    helpers.visible = true;
+    helpers.visible = false;
     scene.add(helpers);
 
     // gui
@@ -124,9 +127,24 @@ function CirclePage() {
 
     gui.add(params, "showHelpers").onChange(function (value) {
       helpers.visible = value;
-      console.log("helpers => ", helpers.visible);
 
       render();
+    });
+
+    gui.add(params, "rotate").onChange(function (value) {
+      function animate() {
+        console.log("value => ", value);
+        controls.autoRotate = value;
+        controls.update();
+        render();
+        rotateAnimation = requestAnimationFrame(animate);
+      }
+
+      if (value) {
+        animate();
+      } else {
+        cancelAnimationFrame(rotateAnimation!);
+      }
     });
 
     window.addEventListener("resize", onWindowResize);
